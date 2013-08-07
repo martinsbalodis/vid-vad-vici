@@ -1,5 +1,27 @@
 
-Figuring out of I am allowed to push the next few commits.
+State revenue service of Latvia public income declaration "parser".
 
-Well, who is going to stop me, right? ;)
+This is a script I made during international hackathon "Hacks for transparency 
+2012", competition organised by "Transparency International", in Vilnius, 
+Lithuania.
 
+The server side part of it sorts and stores the data.
+
+Out team won the competition. :)
+
+
+
+State revenue service site's terms of service do not allow bots to use their 
+site so if you use this, use it manually (or if your are not sure, don't use it 
+at all).
+
+Dependencies:
+
+    You need Greasemonkey (Firefox) or Tampermonkey (Chrome) to use it.
+
+
+Usage:
+
+    Activate it, go to state revenue service declaration page and start making 
+    requests.
+    

@@ -3,21 +3,25 @@
 // @namespace   *.vid.gov.lv/*
 // @description Gets info from VID EDS
 // @include     *.vid.gov.lv/*
-// @version     9
+// @version     10
 // @require     http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js
 // @grant       none
 // ==/UserScript==
+
 /*
- * 
  * 
  * Author: Janis Jansons (janis.jansons@janhouse.lv)
  * 
- * 
+ * Do not use this without consulting your lawyer.
  *
 */
 
+
+var parsingServer="http://vadd.opendata.lv/push/";
 var appid="opendata-mvdbs";
 var appver=9;
+var vadPath="/VID_PDB/VAD";
+
 
 /*--- waitForKeyElements():  A handy, utility function that
     does what it says.
@@ -98,10 +102,11 @@ function waitForKeyElements (
 
 
 
-function initTask() {
+function initTask(){
+
     console.log("We are at the correct domain. Starting...");
-    
-    if(window.location.pathname =="/VID_PDB/VAD"){
+
+    if(window.location.pathname == vadPath){
     console.log("We are at the correct page. Keep on rollin' baby.");
         if($('#frmQuery').length > 0){
             console.log("Form found. Time to try some crazy things.");
@@ -134,11 +139,11 @@ function initTask() {
 
 
 // Posting data to opendata server.
-function postData(data, id, that) {
+function postData(data, id, that){
 
     $.ajax({
         type: 'POST',
-        url: "http://vadd.opendata.lv/push/",
+        url: parsingServer,
         data: {'appid': appid, 'appversion': appver, 'data': data, 'list': document.getElementsByTagName('html')[0].innerHTML, 'id': id},
         success: function(data) {
             console.log("Request done.");
@@ -178,6 +183,7 @@ function newHrefVad(item, isOld, that, captcha) {
     preload.addClass("preload");
     $("#"+that).append(preload);
 
+    // VID's magic o.O
     var url = (isOld == "2") ? '/VID_PDB/VAD/VADData'
         : '/VID_PDB/VAD/VAD2002Data';
 
@@ -185,20 +191,27 @@ function newHrefVad(item, isOld, that, captcha) {
         url: url,
         
         success: function(data) {
-            //preload.remove();
+
             console.log("Request done.");
             var foundin = $('*:contains("<img id=\"cap_pic")');
             preload.css("opacity", 0.4);
             if (/id="cap_pic"/i.test(data)){
+
                 console.log("Found captcha. Request user to fill it");
+
                 $("#scid").attr('value', item); $("#scold").attr('value', isOld);
+
                 $("#scthat").attr("value", that);
+
                 solveCaptcha(data);
+
                 showMessge("Captcha required!", "error");
                 $('#'+that).css("background-color", "red");
+
                 preload.remove();
+
                 return false;
-                //newHrefVad(item, isOld);
+
             }
             if(captcha==0){
                 postData(data, item, that);
@@ -214,76 +227,59 @@ function newHrefVad(item, isOld, that, captcha) {
 
 
 function solveCaptcha(data){
-    console.log("Solving captcha");
+    console.log("Making the human solve the captcha");
     
     var n=data.match(/<img id="cap_pic" alt="" src="\/VID_PDB\/CaptchaImage\?.*?" onload="CaptchaImageLoad\(\);"\/>/gi);
-    //$('html').append('<div id="h123" style="display:none">'+data.children("#frmQuery")+'</div>');
+
     console.log(n[0]);
     
     $("#ccode").html(n[0]);
     $("#csolve").fadeIn("fast");
     $("#tadcode").focus();
-    //<img id="cap_pic" alt="" src="/VID_PDB/CaptchaImage?83415c67-f14c-4fd7-9c34-95a6a27576d0" onload="CaptchaImageLoad();"/>
+
     
 }
 
 function takeSolveCaptcha(){
-    
-    //<form action="/VID_PDB/VAD/VADDataDeclaration" id="frmQuery" method="post">
-    
-    
-    
-$.ajax({
-  type: 'POST',
-  url: "/VID_PDB/VAD/VADDataDeclaration",
-  data: {'CaptchaCode': $("#tadcode").attr('value'), 'search': "Labi"},
-  success: function(data) { console.log("Request done.") 
-      
-  
-              if (/check_code/i.test(data)){
-                console.log("Wrong code. :( Try again...");
-                newHrefVad($("#scid").attr('value'), $("#scold").attr('value'), $("#scthat").attr('value'), 0)
-                return 0;
-                //newHrefVad(item, isOld);
-                
-            }
-            
-            
-  postData(data, $("#scid").attr('value'), $("#scthat").attr('value'), 1);
-      
-      
-  },
 
-});
+    $.ajax({
+        type: 'POST',
+        url: "/VID_PDB/VAD/VADDataDeclaration",
+        data: {'CaptchaCode': $("#tadcode").attr('value'), 'search': "Labi"},
+        success: function(data) {
+          
+            console.log("Request done.") 
+          
+            if (/check_code/i.test(data)){
+            console.log("Wrong code. :( Try again...");
+            newHrefVad($("#scid").attr('value'), $("#scold").attr('value'), $("#scthat").attr('value'), 0)
+            return 0;
+            }
+            postData(data, $("#scid").attr('value'), $("#scthat").attr('value'), 1);
+        },
+    });
     
     $("#csolve").fadeOut();
     $("#tadcode").attr('value', '');
 
-    
 }
 
-function hijackFunction(first) {
+function hijackFunction(first){
     
     console.log("Got the element we need, hijacking the function...");
-     
-    //HrefVad = window.HrefVad;
+
     unsafeWindow.HrefVad = newHrefVad;
-    
-    console.log(window.HrefVad);
-    
+
     //////////////
     $('td a').each(function(index) {
-        //alert(index + ': ' + $(this).text());
-        
+
         var pattern = /'\) ;/g;
         var tt=$(this).attr("onclick").replace(pattern, "', this.id, 0);");
-        //console.log("Final: "+tt);
+
         $(this).attr("onclick", tt);
         $(this).attr("id", 'itq'+index);
-         //$(this).attr("onclick", "console.log('wololo')");
-         //return HrefVad('5daa12fb-53ed-4cd7-af2c-341846411664', '2') ;
+
     });
-    
 
 }
 
@@ -293,49 +289,55 @@ function showMessge(message, type){
     zumzum.css("display", "none");
     zumzum.html(message);
     console.log("Printing status");
-    
-    
+
     if(type=="error"){
         zumzum.addClass("error-o");
-        //zumzum.css("background-image", "-webkit-gradient(linear, 0% 0%, 0% 100%, color-stop(0.33, rgba(162, 5, 5, 0.75)), to(rgba(128, 31, 31, 0.88)))");
-        //zumzum.css("background-image", " -moz-linear-gradient(top, rgba(162, 5, 5, 0.75) 33%, rgba(128, 31, 31, 0.88) 100%);");
     }else if(type=="ok"){
         zumzum.addClass("ok-o");
-        //zumzum.css("background-image", "-webkit-gradient( linear, left top, left bottom, color-stop(0.33, rgba(42, 190, 54, 0.83)), color-stop(1.0, rgba(18, 102, 3, 0.67)) )");
-        //zumzum.css("background-image", "-webkit-gradient( linear, left top, left bottom, color-stop(0.33, rgba(42, 190, 54, 0.83)), color-stop(1.0, rgba(18, 102, 3, 0.67)) )");
     }else if(type=="warning"){
         zumzum.addClass("warning-o");
-        //zumzum.css("background-image", "-webkit-gradient(linear, 0% 0%, 0% 100%, color-stop(0.33, rgba(190, 178, 42, 0.831373)), to(rgba(175, 126, 0, 0.670588)))");
-        //zumzum.css("background-image", "-webkit-gradient(linear, 0% 0%, 0% 100%, color-stop(0.33, rgba(190, 178, 42, 0.831373)), to(rgba(175, 126, 0, 0.670588)))");
     }else {
-        //zumzum.css("background-color", "rgba(142,152,159,0.8)");
+        console.log("What is this I don't even. (Wrong showMessage 'type' parameter.)");
     }
-    
+
     $("#csstatus").prepend(zumzum);
-    
-    
     zumzum.fadeIn();
-    
-   setTimeout(function () {  zumzum.fadeOut("fast", function(){ zumzum.remove();});  }, 5000);
+
+    setTimeout(function () {  zumzum.fadeOut("fast", function(){ zumzum.remove();});  }, 5000);
     
 }
 
+function addStatusSpace(){
 
-$(document).ready(function(){
+        $('html').append('<div id="csstatus" style="background: none;z-index:20;position: fixed; top: 10px; right: 10px"></div>');
 
-    console.log("Found myself at the VID page.");
- 
-    //setTimeout(function () {  initTask();  }, 3000);
+}
 
-    waitForKeyElements (".itemcount", hijackFunction);
+function addCaptchaSpace(){
 
      $('html').append('<div id="csolve" style="text-align:center;display: none;z-index:10; position: fixed; top:0px; left:0px; width: 100%; height: 100%;">'+
      '<p id="ttlr" style="margin-top:60px">Hello there friend! '+
-     'Seems like VID is trying to prove that you are not a human. Prove them that they are wrong!</p><div id="ccode"></div>'+
+     'Seems like VID is trying to prove that you are not a human. Prove them that they are wrong!</p>'+
+     '<div id="ccode"></div>'+
      '<br /><input type="text" id="tadcode" name="CaptchaCode" autocomplete="off" value="" /><br />'+
      '<input type="hidden" value="" name="scthat" id="scthat" />'+
-     '<input type="hidden" value="" name="scid" id="scid" /><input type="hidden" value="" name="scold" id="scold" /><input type="button" value="Take that!" name="search" id="scin" /></div>');
+     '<input type="hidden" value="" name="scid" id="scid" />'+
+     '<input type="hidden" value="" name="scold" id="scold" />'+
+     '<input type="button" value="Take that!" name="search" id="scin" /></div>');
 
+    $("#scin").click(function(){
+        takeSolveCaptcha();
+    });
+
+    $("#tadcode").keyup(function(event){
+        if(event.keyCode == 13){
+            $("#scin").click();
+        }
+    });
+
+}
+
+function addCSS(){
 
     $('html').append('<style type="text/css">#cap_pic{ width:200px; } #csstatus div { '+
     'box-shadow:0 0 11px -1px rgba(0, 0, 0, 0.86), 0 0 4px 1px rgba(255, 255, 255, 0.73) inset; '+
@@ -348,7 +350,7 @@ $(document).ready(function(){
     'background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, color-stop(0.33, rgba(162, 5, 5, 0.75)), to(rgba(128, 31, 31, 0.88)));'+
     'background-image: -moz-linear-gradient(top, rgba(162, 5, 5, 0.75) 33%, rgba(128, 31, 31, 0.88) 100%);'+
     '}'+
-    
+
     '.ok-o{'+
     'background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, color-stop(0.33, rgba(30, 162, 5, 0.75)), to(rgba(18, 102, 3, 0.67)));'+
     'background-image: -moz-linear-gradient(top, rgba(30, 162, 5, 0.75) 33%,  rgba(18, 102, 3, 0.67) 100%);'+
@@ -363,10 +365,12 @@ $(document).ready(function(){
     'background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, color-stop(0.33, rgba(201, 201, 201, 0.91)), to(rgba(255, 255, 255, 0.88)));'+
     'background-image: -moz-linear-gradient(top, rgba(201, 201, 201, 0.91) 33%, rgba(255, 255, 255, 0.88) 100%);'+
     '}'+
+
     '#ccode img{'+
     'box-shadow: inset 2px 2px 5px -2px black, 0px 0px 6px -2px white;'+
     'background-color: white;'+
     '}'+
+
     '#ttlr{'+
     'font-family: "Segoe UI Light","Segoe UI", "Myriad Pro Light", Geneva, Verdana, sans-serif; '+
     'font-size: 21px; '+
@@ -374,20 +378,19 @@ $(document).ready(function(){
 
     ' .preload {left: -16px;position: absolute; top: 0; width: 16px;; width: 16px; height: 16px;display: block; background-image: url("http://www6.vid.gov.lv/VID_PDB/Content/Images/spinner.gif"); }'+
     '</style>');
+}
 
-    $('html').append('<div id="csstatus" style="background: none;z-index:20;position: fixed; top: 10px; right: 10px"></div>');
+$(document).ready(function(){
 
+    console.log("Found myself at the VID page.");
 
+    addCSS();
+    addCaptchaSpace();
+    addStatusSpace();
 
-    $("#scin").click(function(){
-        takeSolveCaptcha();
-    });
-    
-    $("#tadcode").keyup(function(event){
-    if(event.keyCode == 13){
-        $("#scin").click();
-    }
-});
+    waitForKeyElements (".itemcount", hijackFunction);
 
+    // Do not use the next line unless you know what you are doing.
+    //setTimeout(function () {  initTask();  }, 3000);
 
 });
