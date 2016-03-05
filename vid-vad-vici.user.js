@@ -3,9 +3,10 @@
 // @namespace   *.vid.gov.lv/*
 // @description Gets info from VID EDS
 // @include     *.vid.gov.lv/*
-// @version     10
+// @version     11
 // @require     http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js
-// @grant       none
+// @grant       unsafeWindow
+// @grant       GM_xmlhttpRequest
 // ==/UserScript==
 
 /*
@@ -140,7 +141,7 @@ function initTask(){
 
 // Posting data to opendata server.
 function postData(data, id, that){
-
+    
     $.ajax({
         type: 'POST',
         url: parsingServer,
@@ -195,7 +196,7 @@ function newHrefVad(item, isOld, that, captcha) {
             console.log("Request done.");
             var foundin = $('*:contains("<img id=\"cap_pic")');
             preload.css("opacity", 0.4);
-            if (/id="cap_pic"/i.test(data)){
+            if (/showRecaptcha/i.test(data)){
 
                 console.log("Found captcha. Request user to fill it");
 
@@ -225,15 +226,17 @@ function newHrefVad(item, isOld, that, captcha) {
 }
 
 
-
 function solveCaptcha(data){
     console.log("Making the human solve the captcha");
     
-    var n=data.match(/<img id="cap_pic" alt="" src="\/VID_PDB\/CaptchaImage\?.*?" onload="CaptchaImageLoad\(\);"\/>/gi);
+    //var n=data.match(/<img id="cap_pic" alt="" src="\/VID_PDB\/CaptchaImage\?.*?" onload="CaptchaImageLoad\(\);"\/>/gi);
 
-    console.log(n[0]);
+    //console.log(n[0]);
+    $("#checkCode").remove();
+    var gooCaptcha='<script type="text/javascript">showRecaptcha();$("#recaptcha_response_field").hide();$("label[for=\'recaptcha_response_field\']").hide();</script><div id="checkCode"></div>';
     
-    $("#ccode").html(n[0]);
+
+    $("#ccode").html(gooCaptcha);
     $("#csolve").fadeIn("fast");
     $("#tadcode").focus();
 
@@ -245,7 +248,7 @@ function takeSolveCaptcha(){
     $.ajax({
         type: 'POST',
         url: "/VID_PDB/VAD/VADDataDeclaration",
-        data: {'CaptchaCode': $("#tadcode").attr('value'), 'search': "Labi"},
+        data: {'recaptcha_response_field': $("#tadcode").attr('value'), 'search': "Labi", 'recaptcha_challenge_field' : $("#recaptcha_challenge_field").val()},
         success: function(data) {
           
             console.log("Request done.") 
