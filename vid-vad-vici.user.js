@@ -18,7 +18,7 @@
  */
 
 
-var parsingServer="http://vad.timeklis.lv/submit/";
+var parsingServer="https://vad.opendata.lv/import_declarations";
 var appid="opendata-mvdbs";
 var appver=9;
 var vadPath="/VID_PDB/VAD";
