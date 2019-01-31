@@ -18,10 +18,10 @@
  */
 
 
-var parsingServer="https://vad.opendata.lv/import_declarations";
+var parsingServer="http://vad.timeklis.lv:8080/submit.php";
 var appid="opendata-mvdbs";
 var appver=9;
-var vadPath="/VID_PDB/VAD";
+var vadPath="/VAD";
 
 
 /*--- waitForKeyElements():  A handy, utility function that
@@ -191,13 +191,20 @@ function postData(data, id, that){
 
     var collection = trim($("#collection").val());
 
+    var formData = new FormData();
+    formData.append("appid", appid);
+    formData.append("appversion", appver);
+    formData.append("collection", collection);
+    formData.append("data", JSON.stringify(resultData));
+    formData.append("id", id);
 
-
-    $.ajax({
-        type: 'POST',
+    GM_xmlhttpRequest({
+        method: 'POST',
         url: parsingServer,
-        data: {'appid': appid, 'appversion': appver, collection: collection, 'data': JSON.stringify(resultData), 'id': id},
-        success: function(data) {
+        data: formData,
+        onload: function(data) {
+            console.log(data.responseText);
+            data = data.responseText;
             console.log("Request done.");
             $('#'+that).children(".preload").remove();
             if(data.length == 0) {
@@ -236,8 +243,8 @@ function newHrefVad(item, isOld, that, captcha) {
     $("#"+that).append(preload);
 
     // VID's magic o.O
-    var url = (isOld == "2") ? '/VID_PDB/VAD/VADData'
-        : '/VID_PDB/VAD/VAD2002Data';
+    var url = (isOld == "2") ? '/VAD/VADData'
+        : '/VAD/VAD2002Data';
 
     $.ajax({
         url: url,
@@ -298,7 +305,7 @@ function takeSolveCaptcha(){
 
     $.ajax({
         type: 'POST',
-        url: "/VID_PDB/VAD/VADDataDeclaration",
+        url: "/VAD/VADDataDeclaration",
         data: {'recaptcha_response_field': $("#tadcode").val(), 'recaptcha_challenge_field' : $("#recaptcha_challenge_field").val()},
         success: function(data) {
 
@@ -434,7 +441,7 @@ function addCSS(){
         'font-size: 21px; '+
         '}'+
 
-        ' .preload {left: -16px;position: absolute; top: 0; width: 16px;; width: 16px; height: 16px;display: block; background-image: url("http://www6.vid.gov.lv/VID_PDB/Content/Images/spinner.gif"); }'+
+        ' .preload {left: -16px;position: absolute; top: 0; width: 16px;; width: 16px; height: 16px;display: block; background-image: url("http://www6.vid.gov.lv/Content/Images/spinner.gif"); }'+
         '</style>');
 }
 
