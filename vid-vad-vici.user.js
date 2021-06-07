@@ -3,7 +3,7 @@
 // @namespace   *.vid.gov.lv/*
 // @description Gets info from VID EDS
 // @include     *.vid.gov.lv/*
-// @version     11
+// @version     12
 // @require     https://code.jquery.com/jquery-2.2.4.min.js
 // @grant       unsafeWindow
 // @grant       GM_xmlhttpRequest
@@ -18,7 +18,7 @@
  */
 
 
-var parsingServer="http://vad.timeklis.lv:8080/submit.php";
+var parsingServer="http://vad.timeklis.lv/submit.php";
 var appid="opendata-mvdbs";
 var appver=9;
 var vadPath="/VAD";
@@ -151,7 +151,7 @@ function postData(data, id, that){
     var resultData = {
         type: trim($data.find("tr:contains('Deklarācijas veids:') td:nth-of-type(2)").text()),
         name: trim($data.find("tr:contains('Vārds, uzvārds:') td:nth-of-type(2)").text()),
-        workplace: trim($data.find("tr:contains('Darbavieta:') td:nth-of-type(2)").text()),
+        workplace: trim($data.find("tr:contains('Darbavieta:') td:nth-of-type(2), tr:contains('Darbavieta vai valsts amatpersonu saraksta iesniedzējas institūcija:') td:nth-of-type(2)").text()),
         workplace_role: trim($data.find("tr:contains('Valsts amatpersonas amats:') td:nth-of-type(2)").text()),
         date_added: trim($data.find("tr:contains('Iesniegta VID:') td:nth-of-type(2)").text()),
         date_published: trim($data.find("tr:contains('Publicēta:') td:nth-of-type(2)").text()),
